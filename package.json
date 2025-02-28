@@ -1,12 +1,13 @@
 {
   "name": "replicad-threads",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Steve Genoud <steve@sgenoud.com>",
   "type": "module",
   "description": "Helper function to create threads using replicad",
   "module": "dist/es/replicad-threads.js",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "rolldown -c"
