@@ -1,11 +1,12 @@
 import { makeHelix, draw, Plane, makeCylinder } from "replicad";
+import type { Drawing } from "replicad";
 
 export function threadProfile(
   rootWidth: number,
   apexWidth: number,
   height: number,
   overlap = 0.1,
-  apexOffset = 0
+  apexOffset = 0,
 ) {
   const rootRadius = rootWidth / 2;
   const apexRadius = apexWidth / 2;
@@ -27,23 +28,29 @@ export function threadProfile(
   return pen.close();
 }
 
-function clamp(value:number, min:number, max:number) {
+function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
 const STEPS = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
-export function basicThreadLoop(pitch: number, radius: number, profile: Drawing, height = 1, lefthand = false) {
+export function basicThreadLoop(
+  pitch: number,
+  radius: number,
+  profile: Drawing,
+  height = 1,
+  lefthand = false,
+) {
   const helix = makeHelix(
     pitch,
     pitch * clamp(height, 0, 1),
     radius,
     [0, 0, 0],
     [0, 0, 1],
-    lefthand
+    lefthand,
   );
 
-  const profiles = STEPS.map(step => {
+  const profiles = STEPS.map((step) => {
     const pos = helix.pointAt(step);
     const zDir = helix.tangentAt(step);
     const plane = new Plane(pos, [0, 0, 1], zDir);
@@ -59,7 +66,7 @@ export function fadedEnd(
   profile: Drawing,
   bottom = false,
   lefthand = false,
-  height = null
+  height = null,
 ) {
   const h = Math.max(height ?? pitch / 4, pitch / 4);
   const helix = makeHelix(
@@ -68,7 +75,7 @@ export function fadedEnd(
     radius,
     [0, 0, 0],
     [0, 0, bottom ? -1 : 1],
-    lefthand
+    lefthand,
   );
 
   const profiles = STEPS.map((step, i) => {
@@ -101,7 +108,7 @@ type ThreadProfileConfig = {
 
 export const makeRawThread = (
   { pitch, radius, height }: ThreadConfig,
-  { radiusWidth, apexWidth, toothHeight }: ThreadProfileConfig
+  { radiusWidth, apexWidth, toothHeight }: ThreadProfileConfig,
 ) => {
   const profile = threadProfile(radiusWidth, apexWidth, toothHeight);
 
@@ -130,18 +137,18 @@ export const makeRawThread = (
 
 export const makeChamferedThread = (
   { pitch, radius, height }: ThreadConfig,
-  { radiusWidth, apexWidth, toothHeight }: ThreadProfileConfig
+  { radiusWidth, apexWidth, toothHeight }: ThreadProfileConfig,
 ) => {
   const baseThread = makeRawThread(
     { pitch, radius, height },
-    { radiusWidth, apexWidth, toothHeight }
+    { radiusWidth, apexWidth, toothHeight },
   );
 
   let shape;
 
   if (toothHeight > 0) {
     shape = makeCylinder(radius + toothHeight + 0.01, height).chamfer(
-      toothHeight / 2
+      toothHeight / 2,
     );
   } else {
     shape = makeCylinder(radius - 2 * toothHeight + 0.01, height)
@@ -154,7 +161,7 @@ export const makeChamferedThread = (
 
 export const makeThread = (
   { pitch, radius, height }: ThreadConfig,
-  { radiusWidth, apexWidth, toothHeight }: ThreadProfileConfig
+  { radiusWidth, apexWidth, toothHeight }: ThreadProfileConfig,
 ) => {
   const profile = threadProfile(radiusWidth, apexWidth, toothHeight);
 
@@ -190,9 +197,15 @@ export const makeThread = (
     .translate([0, 0, pitch / 4]);
 };
 
-const rad = deg => (deg * Math.PI) / 180;
+const rad = (deg) => (deg * Math.PI) / 180;
 
-export const trapezoidalThreadConfig = ({ threadAngle, pitch }: {threadAngle: number, pitch: number}) => {
+export const trapezoidalThreadConfig = ({
+  threadAngle,
+  pitch,
+}: {
+  threadAngle: number;
+  pitch: number;
+}) => {
   const shoulderWidth = (pitch / 2) * Math.tan(rad(threadAngle / 2));
   const apexWidth = pitch / 2 - shoulderWidth;
   const rootWidth = pitch / 2 + shoulderWidth;

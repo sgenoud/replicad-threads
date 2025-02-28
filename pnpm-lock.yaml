@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      prettier:
+        specifier: ^3.5.2
+        version: 3.5.2
       replicad:
         specifier: ^0.18.1
         version: 0.18.1
@@ -190,6 +193,11 @@ packages:
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
+
+  prettier@3.5.2:
+    resolution: {integrity: sha512-lc6npv5PH7hVqozBR7lkBNOGXV9vMwROAPlumdBkX0wTbbzPu/U1hk5yL8p2pt4Xoc+2mkT8t/sow2YrV/M5qg==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   replicad@0.18.1:
     resolution: {integrity: sha512-86Jm/skAGhG27bbG/AEEiBHN86VsjtoXgzpVO73xNHuArg7JafjVOGFdtcDNvNvNPl2QjBs06mHAzX99n18tLg==}
@@ -408,6 +416,8 @@ snapshots:
   pkg-dir@4.2.0:
     dependencies:
       find-up: 4.1.0
+
+  prettier@3.5.2: {}
 
   replicad@0.18.1:
     dependencies:
