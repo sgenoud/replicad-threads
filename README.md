@@ -19,22 +19,26 @@ pnpm install replicad-threads
 You can also import it within the [replicad studio][studio]:
 
 ```js
-import shrinkWrap from "https://cdn.jsdelivr.net/npm/replicad-threads/dist/studio/replicad-threads.js";
+import { makeThread } from "https://cdn.jsdelivr.net/npm/replicad-threads@latest/dist/studio/replicad-threads.js";
+
 /** @typedef { typeof import("replicad") } replicadLib */
 /** @type {replicadLib} */
-const { drawRoundedRectangle, drawCircle, draw } = replicad;
+const { makeCylinder } = replicad;
 
 export default function main() {
-  const circle = drawCircle(7).translate(8, 18);
-  const rect = drawRoundedRectangle(20, 14, 5);
-
-  return [
-    { shape: rect, color: "silver" },
-    { shape: circle, color: "silver" },
-    shrinkWrap(rect.fuse(circle), 50),
-  ];
+  const thread = makeThread({
+    pitch: 5,
+    radius: 10,
+    height: 20,
+    rootWidth: 3,
+    apexWidth: 1,
+    toothHeight: 1,
+  });
+  return thread.translate(0, 0, 1).fuse(makeCylinder(10, 22));
 }
 ```
+
+[studio]: https://studio.replicad.xyz/workbench#code=UEsDBAoAAAAIABt7XFqfPNxtGgEAAPUBAAAHAAAAY29kZS5qc2VRTWvDMAy951eInJLSxW3HLimDwi477DjY2YuVRVtiG1sZLSX%252FfUqaNoUJ448nvadnmzrvAsMZOv2D701AbWCAOrgO0obZx1KpytjiOxps6TcUFllZ36mAvqVKmweeSPHQasbIypBMkXtD7l%252BNqKT7JFGrFRz45NFgLZ3HnauBJidZeiWluRi5Ht7oE1ZqYcL5LjOMqcrZeL3Hy6klazCIwPNNQhrjcbqstNV9y1D3tmJyVjhksxzOCUhchC6Ohb68S3bJj%252BGJq6aEp%252FUNCdpQH0vYbhasQfpquITdHRac4w8yLOzHBdUejzO6XVCW2uZ1FpnxId9Pa0Dug51tFhy0jeMHZJs1yNjmRd1HzO4fIxNrsNvleTL8AVBLAQIUAAoAAAAIABt7XFqfPNxtGgEAAPUBAAAHAAAAAAAAAAAAAAAAAAAAAABjb2RlLmpzUEsFBgAAAAABAAEANQAAAD8BAAAAAA%253D%253D
 
 ## API
 
@@ -74,3 +78,10 @@ the thread (e.g. "M6") and the `height` is the height of the thread. Note that
 external and internal threads have different configurations, you will use this
 function with `external: true` for external threads and `external: false` for
 internal threads.
+
+## Example
+
+You can find a full example in the `./example` directory. See what it
+look [here][example].
+
+[example]: test
