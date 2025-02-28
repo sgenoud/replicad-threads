@@ -84,4 +84,4 @@ internal threads.
 You can find a full example in the `./example` directory. See what it
 look [here][example].
 
-[example]: test
+[example]: https://studio.replicad.xyz/share/https%3A%2F%2Fraw.githubusercontent.com%2Fsgenoud%2Freplicad-threads%2Frefs%2Fheads%2Fmain%2Fexamples%2Fnut-bolt.js?disable-damping=true&ortho-camera=true&params=true
