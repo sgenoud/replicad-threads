@@ -298,6 +298,21 @@ export function trapezoidalThreadConfigConjugate(
   );
 }
 
+export const metricThreadProfileConfig = (pitch: number, external = true) => {
+  const h = (Math.sqrt(3) / 2) * pitch;
+
+  const toothHeight = (5 / 8) * h;
+  const apexWidth = external ? pitch / 8 : pitch / 4;
+  const rootWidth = external ? (3 * pitch) / 4 : (7 * pitch) / 8;
+
+  return {
+    pitch,
+    rootWidth,
+    apexWidth,
+    toothHeight: external ? toothHeight : -toothHeight,
+  };
+};
+
 export const metricThreadConfig = (
   threadType: MetricThread,
   height: number,
@@ -309,14 +324,13 @@ export const metricThreadConfig = (
   }
   const { pitch, nominalDiameter } = METRIC_THREADS[threadType];
 
-  const h = (Math.sqrt(3) / 2) * pitch;
+  const { rootWidth, apexWidth, toothHeight } = metricThreadProfileConfig(
+    pitch,
+    external,
+  );
 
   const apexRadius = nominalDiameter / 2;
-  const toothHeight = (5 / 8) * h;
   const rootRadius = apexRadius - toothHeight;
-
-  const apexWidth = external ? pitch / 8 : pitch / 4;
-  const rootWidth = external ? (3 * pitch) / 4 : (7 * pitch) / 8;
 
   const radius = external ? rootRadius : apexRadius;
 
@@ -328,6 +342,23 @@ export const metricThreadConfig = (
       rootWidth,
       apexWidth,
       toothHeight: external ? toothHeight : -toothHeight,
+    },
+    clearance,
+  );
+};
+
+export const metricThreadConfigConjugate = (
+  threadConfig: ThreadConfig,
+  clearance = 0,
+) => {
+  const originalToothHeight = threadConfig.toothHeight;
+  const originalExternal = threadConfig.toothHeight > 0;
+
+  return addClearance(
+    {
+      ...threadConfig,
+      ...metricThreadProfileConfig(threadConfig.pitch, !originalExternal),
+      radius: threadConfig.radius + originalToothHeight,
     },
     clearance,
   );
