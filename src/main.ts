@@ -1,8 +1,9 @@
-import { makeHelix, draw, Plane, makeCylinder } from "replicad";
-import type { Drawing } from "replicad";
+import { makeHelix, draw, Plane, makeCylinder, makeSolid } from "replicad";
+import type { Sketch, Face, Drawing } from "replicad";
 
 import { METRIC_THREADS } from "./thread-standards";
 import type { MetricThread } from "./thread-standards";
+import { weld } from "./weld";
 
 export function threadProfile(
   rootWidth: number,
@@ -42,6 +43,7 @@ export function basicThreadLoop(
   radius: number,
   profile: Drawing,
   height = 1,
+  includeEnd: "none" | "first" | "last" | "both" = "none",
   lefthand = false,
 ) {
   const helix = makeHelix(
@@ -58,9 +60,23 @@ export function basicThreadLoop(
     const zDir = helix.tangentAt(step);
     const plane = new Plane(pos, [0, 0, 1], zDir);
 
-    return profile.sketchOnPlane(plane);
+    return profile.sketchOnPlane(plane) as Sketch;
   });
-  return profiles[0].loftWith(profiles.slice(1), { ruled: false });
+
+  const ends: Face[] = [];
+  if (includeEnd === "first" || includeEnd === "both") {
+    ends.push(profiles[0].faces());
+  }
+  if (includeEnd === "last" || includeEnd === "both") {
+    const face = profiles[profiles.length - 1].faces();
+    face.wrapped.Reverse();
+    ends.push(face);
+  }
+
+  const shell = profiles[0].loftWith(profiles.slice(1), { ruled: false }, true);
+
+  if (includeEnd === "none") return shell;
+  return weld([shell, ...ends]);
 }
 
 export function fadedEnd(
@@ -91,11 +107,18 @@ export function fadedEnd(
 
     return profile
       .scale((STEPS.length - i) / STEPS.length, [0, 0])
-      .sketchOnPlane(plane);
+      .sketchOnPlane(plane) as Sketch;
   });
-  const shape = profiles[0].loftWith(profiles.slice(1), { ruled: false });
+  const endFace = profiles[profiles.length - 1].faces();
+  const shape = weld([
+    profiles[0].loftWith(profiles.slice(1), { ruled: false }, true),
+    endFace,
+  ]);
   return bottom ? shape.rotate(180, [0, 0, 0]) : shape;
 }
+
+const range = (start, end) =>
+  Array.from({ length: end - start }, (_, i) => i + start);
 
 type ThreadConfig = {
   pitch: number;
@@ -117,26 +140,38 @@ export const makeRawThread = ({
   const profile = threadProfile(rootWidth, apexWidth, toothHeight);
 
   const totalLoops = height / pitch;
-  const fullLoops = Math.floor(totalLoops);
 
+  if (totalLoops <= 1) {
+    return makeSolid([
+      basicThreadLoop(pitch, radius, profile, totalLoops, "both"),
+    ]);
+  }
+
+  const fullLoops = Math.floor(totalLoops);
   const leftover = totalLoops - fullLoops;
+
+  const firstLoop = basicThreadLoop(pitch, radius, profile, 1, "first");
+
+  let shellLoops = leftover > 0 ? fullLoops - 1 : fullLoops - 2;
+  const lastLoop = basicThreadLoop(
+    pitch,
+    radius,
+    profile,
+    leftover > 0 ? leftover : 1,
+    "last",
+  ).translate([0, 0, (shellLoops + 1) * pitch]);
+
+  if (!shellLoops) {
+    return makeSolid([firstLoop, lastLoop]);
+  }
+
   const singleLoop = basicThreadLoop(pitch, radius, profile);
 
-  let shape = singleLoop.clone();
-  for (let i = 1; i < fullLoops; i++) {
-    shape = shape.fuse(singleLoop.clone().translate([0, 0, i * pitch]), {
-      optimization: "sameFace",
-    });
-  }
+  const shells = range(1, shellLoops + 1).map((i) =>
+    singleLoop.clone().translate([0, 0, i * pitch]),
+  );
 
-  if (leftover > 0) {
-    const partialLoop = basicThreadLoop(pitch, radius, profile, leftover);
-    shape = shape.fuse(partialLoop.translate([0, 0, fullLoops * pitch]), {
-      optimization: "sameFace",
-    });
-  }
-
-  return shape;
+  return makeSolid([firstLoop, ...shells, lastLoop]);
 };
 
 export const makeChamferedThread = ({
@@ -190,27 +225,20 @@ export const makeThread = ({
 
   const singleLoop = basicThreadLoop(pitch, radius, profile);
 
-  let shape = bottomEnd;
-  for (let i = 0; i < fullLoops; i++) {
-    shape = shape.fuse(singleLoop.clone().translate([0, 0, i * pitch]), {
-      optimization: "sameFace",
-    });
-  }
+  const shells = range(0, fullLoops).map((i) =>
+    singleLoop.clone().translate([0, 0, i * pitch]),
+  );
 
   if (leftover > 0) {
     const partialLoop = basicThreadLoop(pitch, radius, profile, leftover);
-    shape = shape.fuse(partialLoop.translate([0, 0, fullLoops * pitch]), {
-      optimization: "sameFace",
-    });
+    shells.push(partialLoop.translate([0, 0, fullLoops * pitch]));
   }
 
   const topEnd = fadedEnd(pitch, radius, profile)
     .translate([0, 0, totalLoops * pitch])
     .rotate(360 * leftover);
 
-  return shape
-    .fuse(topEnd, { optimization: "sameFace" })
-    .translate([0, 0, pitch / 4]);
+  return makeSolid([bottomEnd, ...shells, topEnd]).translate([0, 0, pitch / 4]);
 };
 
 const rad = (deg) => (deg * Math.PI) / 180;
@@ -232,9 +260,9 @@ export const trapezoidalThreadConfig = (
   };
 };
 
-export function trapezoidalThreadConfigConjugate(
+export function addClearance(
   threadConfig: ThreadConfig,
-  radiusOffset = 0,
+  clearance = 0,
 ): ThreadConfig {
   if (clearance === 0) {
     return threadConfig;
@@ -274,7 +302,7 @@ export const metricThreadConfig = (
   threadType: MetricThread,
   height: number,
   external = true,
-  offsetTolerance = 0,
+  clearance = 0,
 ): ThreadConfig => {
   if (!METRIC_THREADS[threadType]) {
     throw new Error(`Thread type ${threadType} not found`);
