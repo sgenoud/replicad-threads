@@ -1,6 +1,6 @@
 {
   "name": "replicad-threads",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "Steve Genoud <steve@sgenoud.com>",
   "type": "module",
   "description": "Helper function to create threads using replicad",
