@@ -65,19 +65,25 @@ additional function to create alternative shapes:
 Creates a partial configuration (you need to provide the radius and the
 height).
 
-#### `trapezoidalThreadConfigConjugate(threadConfig, offset)`
+#### `trapezoidalThreadConfigConjugate(threadConfig, clearance)`
 
 Creates a conjugate thread configuration. This is useful to create the
 corresponding internal thread from an external one (or vice versa). You can add
 an offset which will be added to the radius to allow for some tolerance.
 
-### `metricThreadConfig(name, height, external, offset)`
+### `metricThreadConfig(name, height, external, clearance)`
 
 Creates a thread configuration for a metric thread. The `name` is the name of
 the thread (e.g. "M6") and the `height` is the height of the thread. Note that
 external and internal threads have different configurations, you will use this
 function with `external: true` for external threads and `external: false` for
 internal threads.
+
+### `addClearance(threadConfig, clearance)`
+
+Adds a clearance to a thread configuration. This is useful to create a thread
+that will fit into another one (especially for 3D printing). This function is
+used by the previous ones if you specify a clearance.
 
 ## Example
 
