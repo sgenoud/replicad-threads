@@ -1,9 +1,15 @@
-import { makeHelix, draw, Plane, makeCylinder, makeSolid } from "replicad";
+import {
+  makeHelix,
+  draw,
+  Plane,
+  makeCylinder,
+  makeSolid,
+  weldShellsAndFaces,
+} from "replicad";
 import type { Sketch, Face, Drawing } from "replicad";
 
 import { METRIC_THREADS } from "./thread-standards";
 import type { MetricThread } from "./thread-standards";
-import { weld } from "./weld";
 
 export function threadProfile(
   rootWidth: number,
@@ -76,7 +82,7 @@ export function basicThreadLoop(
   const shell = profiles[0].loftWith(profiles.slice(1), { ruled: false }, true);
 
   if (includeEnd === "none") return shell;
-  return weld([shell, ...ends]);
+  return weldShellsAndFaces([shell, ...ends]);
 }
 
 export function fadedEnd(
@@ -110,7 +116,7 @@ export function fadedEnd(
       .sketchOnPlane(plane) as Sketch;
   });
   const endFace = profiles[profiles.length - 1].faces();
-  const shape = weld([
+  const shape = weldShellsAndFaces([
     profiles[0].loftWith(profiles.slice(1), { ruled: false }, true),
     endFace,
   ]);
